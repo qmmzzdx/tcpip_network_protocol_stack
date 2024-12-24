@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+import re
+import sys
+
+# 获取基本路径，默认为当前目录
+base = sys.argv[1] if len(sys.argv) > 1 else '.'
+
+# 定义模块及其可读名称
+modules = [
+    ['byte_stream', 'ByteStream'],
+    ['reassembler', 'Reassembler'],
+    ['tcp_receiver', 'TCPReceiver'],
+    ['wrapping_integers', 'Wrap32'],
+    ['tcp_sender', 'TCPSender'],
+    ['network_interface', 'NetworkInterface'],
+    ['router', 'Router']
+]
+
+# 计算最长模块名称的长度
+longest_module_length = max(len(module[1]) for module in modules)
+
+
+def count_lines(filepath, filename):
+    """
+    统计给定文件的源代码行数
+    """
+    full_filename = f"{base}/src/{filepath}/{filename}"
+    report = subprocess.run(['sloccount', full_filename], capture_output=True)
+    report.check_returncode()
+    loc = re.search(r'Total Physical Source Lines of Code \(SLOC\) * = (\d+)',
+                    report.stdout.decode('utf-8'))
+    return int(loc.group(1))
+
+
+def get_output_stream():
+    """
+    设置输出目标
+    """
+    return open('/dev/tty', 'w') if os.environ.get('MAKE_TERMOUT') else sys.stdout
+
+
+def print_module_lines(module, output_stream):
+    """
+    打印模块的代码行数
+    """
+    header_file = f"{module[0]}.h"
+    source_file = f"{module[0]}.cpp"
+
+    x = count_lines(module[0], header_file)
+    y = count_lines(module[0], source_file)
+
+    spacing = longest_module_length - len(module[1])
+    output_stream.write(
+        f"{' ' * 13}{module[1]}:{' ' * spacing}{x + y:5d} lines of code\n")
+
+
+if __name__ == "__main__":
+    output_stream = get_output_stream()
+    for module in modules:
+        print_module_lines(module, output_stream)
