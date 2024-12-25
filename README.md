@@ -53,7 +53,7 @@
 ```
 
 #### 项目总体框架
-![项目框架概览](./images/tcpip_network_protocol_stack.png)
+![项目框架概览](./tcpip_network_protocol_stack.png)
 
 #### 项目主要功能
 
